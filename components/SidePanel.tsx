@@ -8,6 +8,7 @@ interface SidePanelProps {
     isTimerVisible: boolean;
     setIsTimerVisible: (isVisible: boolean) => void;
     onNavigate: (page: 'pageOne' | 'pageTwo') => void;
+    setPoints: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const Toggle: React.FC<{ checked: boolean; onChange: (checked: boolean) => void; label: string }> = ({ checked, onChange, label }) => (
@@ -21,7 +22,7 @@ const Toggle: React.FC<{ checked: boolean; onChange: (checked: boolean) => void;
     </label>
 );
 
-export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, theme, setTheme, isTimerVisible, setIsTimerVisible, onNavigate }) => {
+export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, theme, setTheme, isTimerVisible, setIsTimerVisible, onNavigate, setPoints }) => {
 
     const handleThemeChange = (isChecked: boolean) => {
         setTheme(isChecked ? 'dark' : 'light');
@@ -73,14 +74,41 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, theme, se
                         />
                     </div>
 
-                    <nav className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-8">
+                    <nav className="border-t border-gray-200 dark:border-gray-700 pt-8">
                          <button 
                             onClick={() => onNavigate('pageTwo')} 
                             className="block w-full text-left py-2 text-lg text-gray-800 dark:text-gray-200 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors"
                         >
-                           Page Two
+                           Rewards
                         </button>
                     </nav>
+
+                     {/* Admin Commands */}
+                    <div className="mt-auto border-t border-gray-200 dark:border-gray-700 pt-6">
+                        <h3 className="px-2 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Admin Commands
+                        </h3>
+                        <div className="mt-2 flex flex-col gap-1">
+                            <button
+                                onClick={() => setPoints(p => p + 200)}
+                                className="w-full text-left px-2 py-2 rounded text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                Add 200 Points
+                            </button>
+                            <button
+                                onClick={() => setPoints(p => Math.max(0, p - 50))}
+                                className="w-full text-left px-2 py-2 rounded text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                Remove 50 Points
+                            </button>
+                            <button
+                                onClick={() => setPoints(0)}
+                                className="w-full text-left px-2 py-2 rounded text-base text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                Reset Points
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
             </div>

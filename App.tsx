@@ -86,6 +86,7 @@ const App: React.FC = () => {
         isTimerVisible={isTimerVisible}
         setIsTimerVisible={setIsTimerVisible}
         onNavigate={handleNavigate}
+        setPoints={setPoints}
       />
       
       <div className={currentPage === 'pageOne' ? 'contents' : 'hidden'}>
@@ -109,6 +110,7 @@ const App: React.FC = () => {
       <div className={currentPage === 'pageTwo' ? 'contents' : 'hidden'}>
         <PageTwo 
           points={points}
+          setPoints={setPoints}
           onNavigateBack={() => handleNavigate('pageOne')}
         />
       </div>
