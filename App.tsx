@@ -1,70 +1,116 @@
+import React, { useState, useCallback, useEffect } from 'react';
+import { generateFlashcards, generateSummary, generateQuiz } from './services/geminiService';
+import type { Flashcard, QuizQuestion } from './types';
+import { Header } from './components/Header';
+import { SidePanel } from './components/SidePanel';
+import { PageOne } from './components/PageOne';
+import { PageTwo } from './components/PageTwo';
 
-import React, { useState, useCallback } from 'react';
-import { NotesEditor } from './components/NotesEditor';
-import { FlashcardViewer } from './components/FlashcardViewer';
-import { StudyTracker } from './components/StudyTracker';
-import { generateFlashcards } from './services/geminiService';
-import type { Flashcard } from './types';
 
 const App: React.FC = () => {
   const [notes, setNotes] = useState<string>('');
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
+  const [summary, setSummary] = useState<string>('');
+  const [quiz, setQuiz] = useState<QuizQuestion[]>([]);
   const [points, setPoints] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loadingStates, setLoadingStates] = useState({
+    flashcards: false,
+    summary: false,
+    quiz: false,
+  });
   const [error, setError] = useState<string | null>(null);
 
-  const handleGenerateFlashcards = useCallback(async () => {
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [isTimerVisible, setIsTimerVisible] = useState(true);
+  const [currentPage, setCurrentPage] = useState<'pageOne' | 'pageTwo'>('pageOne');
+
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove(theme === 'dark' ? 'light' : 'dark');
+    root.classList.add(theme);
+    localStorage.setItem('study-app-theme', theme);
+  }, [theme]);
+  
+  useEffect(() => {
+      const savedTheme = localStorage.getItem('study-app-theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+          setTheme(savedTheme);
+      }
+  }, []);
+
+  const createGenerateHandler = useCallback((
+    type: 'flashcards' | 'summary' | 'quiz',
+    generator: (notes: string) => Promise<any>,
+    setter: (data: any) => void,
+    clearer: () => void
+  ) => async () => {
     if (!notes.trim()) {
-      setError('Please enter some notes before generating flashcards.');
+      setError('Please enter some notes first.');
       return;
     }
-    setIsLoading(true);
+    setLoadingStates(prev => ({ ...prev, [type]: true }));
     setError(null);
-    setFlashcards([]);
+    clearer();
 
     try {
-      const generated = await generateFlashcards(notes);
-      setFlashcards(generated);
+      const generatedData = await generator(notes);
+      setter(generatedData);
     } catch (err) {
-      setError('Failed to generate flashcards. Please check your API key and try again.');
+      setError(`Failed to generate ${type}. Please check your API key and try again.`);
       console.error(err);
     } finally {
-      setIsLoading(false);
+      setLoadingStates(prev => ({ ...prev, [type]: false }));
     }
   }, [notes]);
 
+  const handleGenerateFlashcards = createGenerateHandler('flashcards', generateFlashcards, setFlashcards, () => setFlashcards([]));
+  const handleGenerateSummary = createGenerateHandler('summary', generateSummary, setSummary, () => setSummary(''));
+  const handleGenerateQuiz = createGenerateHandler('quiz', generateQuiz, setQuiz, () => setQuiz([]));
+
+  const handleNavigate = (page: 'pageOne' | 'pageTwo') => {
+    setCurrentPage(page);
+    setIsSidePanelOpen(false); // Close panel on navigation
+  };
+
+
   return (
-    <div className="min-h-screen flex flex-col font-sans bg-gray-900 text-gray-100 p-4 sm:p-6 lg:p-8">
-      <header className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-cyan-400">Gemini Study Buddy</h1>
-        <div className="bg-gray-800 rounded-lg px-4 py-2 shadow-md">
-          <span className="font-semibold text-lg">Points: </span>
-          <span className="font-bold text-xl text-yellow-400">{points}</span>
-        </div>
-      </header>
-
-      <div className="flex-grow flex flex-col lg:flex-row gap-8">
-        {/* Left Side: Notes and Flashcards */}
-        <main className="flex-grow lg:w-2/3 flex flex-col gap-6">
-          <NotesEditor
-            notes={notes}
-            setNotes={setNotes}
-            onGenerate={handleGenerateFlashcards}
-            isLoading={isLoading}
-          />
-          {error && (
-            <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg relative" role="alert">
-              <strong className="font-bold">Error: </strong>
-              <span className="block sm:inline">{error}</span>
-            </div>
-          )}
-          <FlashcardViewer flashcards={flashcards} isLoading={isLoading} />
-        </main>
-
-        {/* Right Side: Study Tracker */}
-        <aside className="lg:w-1/3 xl:w-1/4">
-          <StudyTracker setPoints={setPoints} />
-        </aside>
+    <div className="min-h-screen flex flex-col font-sans bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 p-4 sm:p-6 lg:p-8 transition-colors duration-300">
+      <Header onMenuClick={() => setIsSidePanelOpen(true)} />
+      <SidePanel 
+        isOpen={isSidePanelOpen}
+        onClose={() => setIsSidePanelOpen(false)}
+        theme={theme}
+        setTheme={setTheme}
+        isTimerVisible={isTimerVisible}
+        setIsTimerVisible={setIsTimerVisible}
+        onNavigate={handleNavigate}
+      />
+      
+      <div className={currentPage === 'pageOne' ? 'contents' : 'hidden'}>
+        <PageOne
+          notes={notes}
+          setNotes={setNotes}
+          onGenerateFlashcards={handleGenerateFlashcards}
+          onGenerateSummary={handleGenerateSummary}
+          onGenerateQuiz={handleGenerateQuiz}
+          loadingStates={loadingStates}
+          flashcards={flashcards}
+          summary={summary}
+          quiz={quiz}
+          error={error}
+          isTimerVisible={isTimerVisible}
+          points={points}
+          setPoints={setPoints}
+          isActive={currentPage === 'pageOne'}
+        />
+      </div>
+      <div className={currentPage === 'pageTwo' ? 'contents' : 'hidden'}>
+        <PageTwo 
+          points={points}
+          onNavigateBack={() => handleNavigate('pageOne')}
+        />
       </div>
     </div>
   );

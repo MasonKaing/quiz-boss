@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Flashcard } from './Flashcard';
 import type { Flashcard as FlashcardType } from '../types';
@@ -9,24 +8,24 @@ interface FlashcardViewerProps {
 }
 
 const LoadingSkeleton: React.FC = () => (
-  <div className="bg-gray-700 rounded-lg p-6 animate-pulse" style={{ height: '12rem' }}>
-    <div className="h-4 bg-gray-600 rounded w-3/4 mb-4"></div>
-    <div className="h-3 bg-gray-600 rounded w-1/2"></div>
+  <div className="bg-gray-200 dark:bg-gray-700 rounded-lg p-6 animate-pulse" style={{ height: '12rem' }}>
+    <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-4"></div>
+    <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
   </div>
 );
 
 export const FlashcardViewer: React.FC<FlashcardViewerProps> = ({ flashcards, isLoading }) => {
   return (
-    <div className="flex-grow bg-gray-800 p-6 rounded-lg shadow-xl overflow-y-auto">
-      <h2 className="text-2xl font-semibold text-cyan-300 mb-4">Generated Flashcards</h2>
+    <div className="flex-grow bg-white dark:bg-gray-800 p-6 rounded-b-lg shadow-xl overflow-y-auto h-full">
+      <h2 className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300 mb-4">Generated Flashcards</h2>
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => <LoadingSkeleton key={i} />)}
         </div>
       )}
       {!isLoading && flashcards.length === 0 && (
-        <div className="flex items-center justify-center h-48 bg-gray-900/50 rounded-lg">
-          <p className="text-gray-400">Your flashcards will appear here once generated.</p>
+        <div className="flex items-center justify-center h-full min-h-48 bg-gray-100/50 dark:bg-gray-900/50 rounded-lg">
+          <p className="text-gray-500 dark:text-gray-400">Generate flashcards from your notes to see them here.</p>
         </div>
       )}
       {!isLoading && flashcards.length > 0 && (
