@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Study Buddy",
+  "description": "An intelligent study application that tracks your study time, awards points for focus, and uses the Gemini API to automatically generate flashcards from your notes to enhance your learning experience.",
+  "requestFramePermissions": []
+}
