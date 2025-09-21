@@ -9,10 +9,8 @@ export interface QuizQuestion {
   correctAnswer: string;
 }
 
-// FIX: Added RewardOutcome interface to resolve type error in PageTwo.tsx
+// FIX: Add missing RewardOutcome interface. This was causing a compilation error in components/RewardModal.tsx.
 export interface RewardOutcome {
+  type: 'win' | 'loss' | 'multiplier';
   label: string;
-  value: (cost: number) => number;
-  probability: number;
-  type: 'loss' | 'win' | 'multiplier';
 }

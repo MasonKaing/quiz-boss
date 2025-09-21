@@ -61,9 +61,9 @@ export const TabbedContent: React.FC<TabbedContentProps> = (props) => {
     return (
       <button
         onClick={() => setActiveTab(tabName)}
-        className={`px-4 py-2 text-sm font-semibold rounded-t-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900
+        className={`px-4 py-2 text-sm font-semibold rounded-t-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900
           ${isActive 
-            ? 'bg-white dark:bg-gray-800 text-cyan-600 dark:text-cyan-400' 
+            ? 'bg-white dark:bg-gray-800 text-violet-600 dark:text-violet-400' 
             : 'bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
           }`}
       >

@@ -25,7 +25,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({ notes, setNotes, onGen
   
   return (
     <div className="flex flex-col gap-4 bg-white dark:bg-gray-800 p-6 rounded-b-lg shadow-xl h-full">
-      <h2 className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300">Your Study Notes</h2>
+      <h2 className="text-2xl font-semibold text-violet-600 dark:text-violet-300">Your Study Notes</h2>
       <p className="text-gray-600 dark:text-gray-400">
         Enter your notes below. Then use the buttons to generate study materials with Gemini.
       </p>
@@ -41,7 +41,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({ notes, setNotes, onGen
         <button
             onClick={onGenerateFlashcards}
             disabled={isAnyLoading}
-            className="px-5 py-2.5 font-bold text-white bg-cyan-600 rounded-lg hover:bg-cyan-500 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-cyan-500 shadow-lg"
+            className="px-5 py-2.5 font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-cyan-500 shadow-lg"
         >
             {loadingStates.flashcards ? <div className="flex items-center"><LoadingSpinner /> Generating...</div> : 'Generate Flashcards'}
         </button>
@@ -55,7 +55,7 @@ export const NotesEditor: React.FC<NotesEditorProps> = ({ notes, setNotes, onGen
         <button
             onClick={onGenerateQuiz}
             disabled={isAnyLoading}
-            className="px-5 py-2.5 font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-500 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-purple-500 shadow-lg"
+            className="px-5 py-2.5 font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-purple-500 shadow-lg"
         >
             {loadingStates.quiz ? <div className="flex items-center"><LoadingSpinner /> Quizzing...</div> : 'Generate Quiz'}
         </button>

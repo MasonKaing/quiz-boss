@@ -7,7 +7,6 @@ interface SidePanelProps {
     setTheme: (theme: 'dark' | 'light') => void;
     isTimerVisible: boolean;
     setIsTimerVisible: (isVisible: boolean) => void;
-    onNavigate: (page: 'pageOne' | 'pageTwo') => void;
     setPoints: React.Dispatch<React.SetStateAction<number>>;
 }
 
@@ -16,13 +15,13 @@ const Toggle: React.FC<{ checked: boolean; onChange: (checked: boolean) => void;
         <span className="text-lg text-gray-800 dark:text-gray-200">{label}</span>
         <div className="relative">
             <input type="checkbox" className="sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-            <div className={`block w-14 h-8 rounded-full transition-colors ${checked ? 'bg-cyan-500' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+            <div className={`block w-14 h-8 rounded-full transition-colors ${checked ? 'bg-violet-500' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
             <div className={`dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${checked ? 'transform translate-x-6' : ''}`}></div>
         </div>
     </label>
 );
 
-export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, theme, setTheme, isTimerVisible, setIsTimerVisible, onNavigate, setPoints }) => {
+export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, theme, setTheme, isTimerVisible, setIsTimerVisible, setPoints }) => {
 
     const handleThemeChange = (isChecked: boolean) => {
         setTheme(isChecked ? 'dark' : 'light');
@@ -49,7 +48,7 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, theme, se
                 }`}
             >
                 <header className="p-6 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">Settings</h2>
+                    <h2 className="text-2xl font-bold text-violet-600 dark:text-violet-400">Settings</h2>
                     <button 
                         onClick={onClose} 
                         className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -73,15 +72,6 @@ export const SidePanel: React.FC<SidePanelProps> = ({ isOpen, onClose, theme, se
                             onChange={setIsTimerVisible}
                         />
                     </div>
-
-                    <nav className="border-t border-gray-200 dark:border-gray-700 pt-8">
-                         <button 
-                            onClick={() => onNavigate('pageTwo')} 
-                            className="block w-full text-left py-2 text-lg text-gray-800 dark:text-gray-200 hover:text-cyan-500 dark:hover:text-cyan-400 transition-colors"
-                        >
-                           Rewards
-                        </button>
-                    </nav>
 
                      {/* Admin Commands */}
                     <div className="mt-auto border-t border-gray-200 dark:border-gray-700 pt-6">

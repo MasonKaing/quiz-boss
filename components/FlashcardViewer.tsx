@@ -17,7 +17,7 @@ const LoadingSkeleton: React.FC = () => (
 export const FlashcardViewer: React.FC<FlashcardViewerProps> = ({ flashcards, isLoading }) => {
   return (
     <div className="flex-grow bg-white dark:bg-gray-800 p-6 rounded-b-lg shadow-xl overflow-y-auto h-full">
-      <h2 className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300 mb-4">Generated Flashcards</h2>
+      <h2 className="text-2xl font-semibold text-violet-600 dark:text-violet-300 mb-4">Generated Flashcards</h2>
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => <LoadingSkeleton key={i} />)}
