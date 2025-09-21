@@ -112,6 +112,7 @@ const App: React.FC = () => {
           points={points}
           setPoints={setPoints}
           onNavigateBack={() => handleNavigate('pageOne')}
+          quiz={quiz}
         />
       </div>
     </div>

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { RewardModal } from './RewardModal';
-import type { RewardOutcome } from '../types';
+import type { RewardOutcome, QuizQuestion } from '../types';
 
 interface PageTwoProps {
   points: number;
   setPoints: React.Dispatch<React.SetStateAction<number>>;
   onNavigateBack: () => void;
+  quiz: QuizQuestion[];
 }
 
 type ActiveTab = 'streetVendor' | 'shop' | 'battle';
@@ -50,7 +51,266 @@ const armorItems = [
     { id: 'greaves', name: 'Battered Greaves', cost: 100 },
 ];
 
-export const PageTwo: React.FC<PageTwoProps> = ({ points, setPoints, onNavigateBack }) => {
+const BattleComponent: React.FC<{ purchasedArmor: string[], quiz: QuizQuestion[] }> = ({ purchasedArmor, quiz }) => {
+    type BattleState = 'idle' | 'ongoing' | 'won' | 'lost';
+
+    const [battleState, setBattleState] = useState<BattleState>('idle');
+    const [playerHealth, setPlayerHealth] = useState(0);
+    const [maxPlayerHealth, setMaxPlayerHealth] = useState(0);
+    const [bossHealth, setBossHealth] = useState(0);
+    const [maxBossHealth, setMaxBossHealth] = useState(0);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+    const [isTurnResolved, setIsTurnResolved] = useState(false);
+    const [turnMessage, setTurnMessage] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [armorRetries, setArmorRetries] = useState(0);
+    const [isArmorBreak, setIsArmorBreak] = useState(false);
+
+
+    const handleStartBattle = () => {
+        const initialPlayerHealth = 1 + purchasedArmor.length;
+        const initialBossHealth = quiz.length;
+        
+        setPlayerHealth(initialPlayerHealth);
+        setMaxPlayerHealth(initialPlayerHealth);
+        setBossHealth(initialBossHealth);
+        setMaxBossHealth(initialBossHealth);
+        setCurrentQuestionIndex(0);
+        setSelectedAnswer(null);
+        setIsTurnResolved(false);
+        setTurnMessage('');
+        setError(null);
+        setBattleState('ongoing');
+        setArmorRetries(purchasedArmor.length);
+        setIsArmorBreak(false);
+    };
+
+    const handleAnswerSelect = async (answer: string) => {
+        if (isTurnResolved || isArmorBreak || isSubmitting) return;
+
+        setSelectedAnswer(answer);
+        setIsSubmitting(true);
+        setError(null);
+
+        const isCorrect = answer === quiz[currentQuestionIndex].correctAnswer;
+        const hasArmorRetry = !isCorrect && armorRetries > 0;
+        
+        try {
+            const response = await fetch('http://127.0.0.1:5000/api/battle/resolve-turn', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    wasAnswerCorrect: isCorrect,
+                    playerHealth: playerHealth,
+                    bossHealth: bossHealth,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const result = await response.json();
+            
+            setPlayerHealth(result.newPlayerHealth);
+            setBossHealth(result.newBossHealth);
+
+            if (result.newPlayerHealth <= 0) {
+                setBattleState('lost');
+                setTurnMessage(result.message);
+                setIsTurnResolved(true);
+                return;
+            } else if (result.newBossHealth <= 0) {
+                setBattleState('won');
+                setTurnMessage(result.message);
+                setIsTurnResolved(true);
+                return;
+            }
+            
+            if (hasArmorRetry) {
+                setArmorRetries(prev => prev - 1);
+                setTurnMessage("Your armor broke! You took damage but get another chance.");
+                setIsArmorBreak(true);
+            } else {
+                setTurnMessage(result.message);
+                setIsTurnResolved(true);
+            }
+
+        } catch (err) {
+            setError('Failed to connect to the battle server. Please ensure the backend is running.');
+            console.error(err);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleTryAgain = () => {
+        setIsArmorBreak(false);
+        setSelectedAnswer(null);
+        setTurnMessage('');
+    };
+    
+    const handleNextQuestion = () => {
+        setIsArmorBreak(false); // Should not be needed, but good for safety
+        if (currentQuestionIndex < quiz.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+            setSelectedAnswer(null);
+            setIsTurnResolved(false);
+            setTurnMessage('');
+        } else {
+            if(bossHealth > 0 && playerHealth > 0) {
+                setBattleState('won');
+            }
+        }
+    };
+
+    const HealthBar: React.FC<{ current: number; max: number; label: string; color: string; retries?: number }> = ({ current, max, label, color, retries }) => (
+        <div className="w-full">
+            <div className="flex justify-between items-baseline">
+                <span className="text-lg font-semibold">{label}</span>
+                {typeof retries !== 'undefined' && (
+                     <span className="text-sm font-mono text-gray-500 dark:text-gray-400">Armor Retries: {retries}</span>
+                )}
+            </div>
+            <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-6 my-1">
+                <div 
+                    className={`${color} h-6 rounded-full transition-all duration-500 text-white font-bold flex items-center justify-center`}
+                    style={{ width: `${max > 0 ? (current / max) * 100 : 0}%` }}
+                >
+                    {current}/{max}
+                </div>
+            </div>
+        </div>
+    );
+    
+    if (battleState === 'idle') {
+        const canStart = quiz.length > 0;
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+                <h3 className="text-3xl font-bold text-red-500">Prepare for Battle!</h3>
+                <p className="mt-4 text-gray-600 dark:text-gray-400 max-w-md">
+                    Use the quiz you generated from your notes to defeat the boss. Your health is determined by your armor, and the boss's health is based on the number of questions.
+                </p>
+                <div className="mt-6 text-xl">
+                    <p>Your Health: <span className="font-bold text-green-500">{1 + purchasedArmor.length}</span></p>
+                    <p>Opponent's Health: <span className="font-bold text-red-500">{quiz.length}</span></p>
+                </div>
+                <button
+                    onClick={handleStartBattle}
+                    disabled={!canStart}
+                    className="mt-8 px-8 py-4 font-bold text-white bg-red-600 rounded-lg hover:bg-red-500 disabled:bg-gray-500 disabled:cursor-not-allowed transition-transform transform hover:scale-110"
+                >
+                    {canStart ? 'Start Battle' : 'Generate a Quiz First!'}
+                </button>
+            </div>
+        );
+    }
+
+    if (battleState === 'won' || battleState === 'lost') {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+                <h3 className={`text-5xl font-extrabold ${battleState === 'won' ? 'text-green-500' : 'text-red-500'}`}>
+                    {battleState === 'won' ? 'You Win!' : 'You Lose!'}
+                </h3>
+                <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
+                    {battleState === 'won' ? 'Congratulations, you defeated the boss!' : 'The boss was too strong. Study more and try again!'}
+                </p>
+                <button
+                    onClick={handleStartBattle}
+                    className="mt-8 px-8 py-4 font-bold text-white bg-cyan-600 rounded-lg hover:bg-cyan-500 transition-transform transform hover:scale-110"
+                >
+                    Play Again
+                </button>
+            </div>
+        );
+    }
+    
+    const currentQuestion = quiz[currentQuestionIndex];
+
+    return (
+        <div className="flex flex-col items-center justify-between h-full p-4">
+            <div className="w-full max-w-2xl flex flex-col items-center gap-4">
+                 <HealthBar current={bossHealth} max={maxBossHealth} label="Opponent's Health" color="bg-red-600" />
+                 <HealthBar current={playerHealth} max={maxPlayerHealth} label="Your Health" color="bg-green-600" retries={armorRetries}/>
+            </div>
+
+            {error && <p className="text-red-500 text-center my-4">{error}</p>}
+            
+            <div className="my-6 text-center w-full max-w-3xl">
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">Question {currentQuestionIndex + 1} / {quiz.length}</p>
+                <h4 className="text-2xl font-semibold mt-1">{currentQuestion.question}</h4>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-3xl">
+                {currentQuestion.options.map((option, index) => {
+                    let buttonClass = 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600';
+                    const isSelectedAnswer = option === selectedAnswer;
+
+                    if (isArmorBreak) {
+                        // Armor break logic: only show the selected wrong answer
+                        if (isSelectedAnswer) {
+                            buttonClass = 'bg-red-600 text-white ring-2 ring-red-400';
+                        } else {
+                            buttonClass = 'bg-gray-200 dark:bg-gray-700 opacity-50';
+                        }
+                    } else if (isTurnResolved) {
+                        // Normal turn resolved logic: show correct and incorrect
+                        const isCorrectAnswer = option === currentQuestion.correctAnswer;
+                        if (isCorrectAnswer) {
+                            buttonClass = 'bg-green-600 text-white ring-2 ring-green-400';
+                        } else if (isSelectedAnswer && !isCorrectAnswer) {
+                            buttonClass = 'bg-red-600 text-white ring-2 ring-red-400';
+                        } else {
+                             buttonClass = 'bg-gray-200 dark:bg-gray-700 opacity-50';
+                        }
+                    }
+                    return (
+                        <button
+                            key={index}
+                            onClick={() => handleAnswerSelect(option)}
+                            disabled={isTurnResolved || isArmorBreak || isSubmitting}
+                            className={`p-4 rounded-lg text-left w-full transition-all duration-200 disabled:cursor-not-allowed font-semibold ${buttonClass}`}
+                        >
+                            {option}
+                        </button>
+                    );
+                })}
+            </div>
+            
+            <div className="mt-6 text-center h-20 w-full max-w-3xl flex flex-col justify-center items-center">
+                {isSubmitting && <p className="text-cyan-500">Resolving turn...</p>}
+                {(isTurnResolved || isArmorBreak) && !isSubmitting && (
+                    <div className="flex flex-col items-center gap-4">
+                        <p className="text-lg font-semibold text-yellow-500 dark:text-yellow-400">{turnMessage}</p>
+                        {isTurnResolved && !isArmorBreak && (
+                             <button
+                                onClick={handleNextQuestion}
+                                className="px-8 py-3 font-bold text-white bg-cyan-600 rounded-lg hover:bg-cyan-500 transition-transform transform hover:scale-105"
+                            >
+                               {currentQuestionIndex < quiz.length - 1 ? 'Next Question' : 'Finish'}
+                            </button>
+                        )}
+                         {isArmorBreak && (
+                             <button
+                                onClick={handleTryAgain}
+                                className="px-8 py-3 font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-transform transform hover:scale-105"
+                            >
+                               Try Again
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+
+export const PageTwo: React.FC<PageTwoProps> = ({ points, setPoints, onNavigateBack, quiz }) => {
     const [activeTab, setActiveTab] = useState<ActiveTab>('streetVendor');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalContent, setModalContent] = useState<{ winningOutcome: RewardOutcome; reel: RewardOutcome[] } | null>(null);
@@ -198,9 +458,7 @@ export const PageTwo: React.FC<PageTwoProps> = ({ points, setPoints, onNavigateB
                         </div>
                     )}
                     {activeTab === 'battle' && (
-                        <div className="flex items-center justify-center h-full">
-                            <p className="text-gray-500 dark:text-gray-400 text-xl">Battle feature coming soon!</p>
-                        </div>
+                       <BattleComponent purchasedArmor={purchasedArmor} quiz={quiz} />
                     )}
                 </div>
             </div>
