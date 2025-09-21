@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { RewardModal } from './RewardModal';
+import type { RewardOutcome } from '../types';
 
 interface PageTwoProps {
   points: number;
@@ -7,67 +8,100 @@ interface PageTwoProps {
   onNavigateBack: () => void;
 }
 
-type ActiveTab = 'shop' | 'map';
+type ActiveTab = 'streetVendor' | 'shop' | 'battle';
 
-const shopItems = [
-    { id: 'beginner', name: 'Beginner', cost: 50 },
-    { id: 'advanced', name: 'Advanced', cost: 100 },
-    { id: 'mystery', name: 'Mystery', cost: 200 },
+const streetVendorItems = [
+    { 
+        id: 'beginner', 
+        name: 'Beginner Chest', 
+        cost: 50,
+        outcomes: [
+            { label: '-50%', value: (c: number) => c / 2, probability: 0.55, type: 'loss' },
+            { label: '+20', value: (c: number) => c + 20, probability: 0.40, type: 'win' },
+            { label: 'x2', value: (c: number) => c * 2, probability: 0.05, type: 'multiplier' },
+        ] as RewardOutcome[],
+    },
+    { 
+        id: 'advanced', 
+        name: 'Advanced Chest', 
+        cost: 100,
+        outcomes: [
+            { label: '-50%', value: (c: number) => c / 2, probability: 0.50, type: 'loss' },
+            { label: '+40', value: (c: number) => c + 40, probability: 0.40, type: 'win' },
+            { label: 'x2', value: (c: number) => c * 2, probability: 0.10, type: 'multiplier' },
+        ] as RewardOutcome[],
+    },
+    { 
+        id: 'mystery', 
+        name: 'Mystery Chest', 
+        cost: 200,
+        outcomes: [
+            { label: '-75%', value: (c: number) => c / 4, probability: 0.70, type: 'loss' },
+            { label: 'x2', value: (c: number) => c * 2, probability: 0.25, type: 'multiplier' },
+            { label: 'x3', value: (c: number) => c * 3, probability: 0.05, type: 'multiplier' },
+        ] as RewardOutcome[],
+    },
+];
+
+const armorItems = [
+    { id: 'helmet', name: 'War-Torn Helm', cost: 100 },
+    { id: 'chestplate', name: 'Scuffed Chestplate', cost: 100 },
+    { id: 'gauntlets', name: 'Rusted Gauntlets', cost: 100 },
+    { id: 'greaves', name: 'Battered Greaves', cost: 100 },
 ];
 
 export const PageTwo: React.FC<PageTwoProps> = ({ points, setPoints, onNavigateBack }) => {
-    const [activeTab, setActiveTab] = useState<ActiveTab>('shop');
+    const [activeTab, setActiveTab] = useState<ActiveTab>('streetVendor');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [pendingReward, setPendingReward] = useState<{ text: string; type: 'win' | 'loss'; netChange: number } | null>(null);
+    const [modalContent, setModalContent] = useState<{ winningOutcome: RewardOutcome; reel: RewardOutcome[] } | null>(null);
+    const [pendingRewardValue, setPendingRewardValue] = useState<number>(0);
+    const [purchasedArmor, setPurchasedArmor] = useState<string[]>([]);
 
-    const handlePurchase = (item: { id: string; cost: number }) => {
+
+    const handlePurchase = (item: typeof streetVendorItems[0]) => {
         if (points < item.cost) return;
         
-        // Deduct cost immediately for a better UX
         setPoints(prevPoints => prevPoints - item.cost);
 
         const rand = Math.random();
-        let outcome = 0; // The amount to be returned to the user
+        let cumulativeProbability = 0;
+        const winningOutcome = item.outcomes.find(outcome => {
+            cumulativeProbability += outcome.probability;
+            return rand < cumulativeProbability;
+        }) || item.outcomes[0];
 
-        switch (item.id) {
-            case 'beginner': // Cost: 50
-                if (rand < 0.40) { outcome = item.cost / 2; } 
-                else if (rand < 0.95) { outcome = item.cost + 20; }
-                else { outcome = item.cost * 2; }
-                break;
-            case 'advanced': // Cost: 100
-                if (rand < 0.50) { outcome = item.cost / 2; }
-                else if (rand < 0.90) { outcome = item.cost + 40; }
-                else { outcome = item.cost * 2; }
-                break;
-            case 'mystery': // Cost: 200
-                if (rand < 0.70) { outcome = item.cost / 4; }
-                else { outcome = item.cost * 2; }
-                break;
+        // Generate a long reel for visual effect
+        const reel: RewardOutcome[] = [];
+        for (let i = 0; i < 50; i++) {
+            const r = Math.random();
+            let cp = 0;
+            const randomOutcome = item.outcomes.find(o => {
+                cp += o.probability;
+                return r < cp;
+            }) || item.outcomes[0];
+            reel.push(randomOutcome);
         }
 
-        const netChange = outcome - item.cost;
-        let message = '';
-        let messageType: 'win' | 'loss' = 'win';
+        // Place the winning item at a fixed position near the end
+        reel[45] = winningOutcome; 
 
-        if (netChange > 0) {
-            message = `You won ${netChange} points!`;
-            messageType = 'win';
-        } else {
-            message = `You lost ${Math.abs(netChange)} points.`;
-            messageType = 'loss';
-        }
-
-        setPendingReward({ text: message, type: messageType, netChange: outcome });
+        setPendingRewardValue(winningOutcome.value(item.cost));
+        setModalContent({ winningOutcome, reel });
         setIsModalOpen(true);
     };
 
     const handleClaimReward = () => {
-        if (pendingReward) {
-            setPoints(prevPoints => prevPoints + pendingReward.netChange);
-        }
+        setPoints(prevPoints => prevPoints + pendingRewardValue);
         setIsModalOpen(false);
-        setPendingReward(null);
+        setModalContent(null);
+        setPendingRewardValue(0);
+    };
+
+    const handleArmorPurchase = (armorPiece: typeof armorItems[0]) => {
+        if (points >= armorPiece.cost && !purchasedArmor.includes(armorPiece.id)) {
+            setPoints(p => p - armorPiece.cost);
+            setPurchasedArmor(prev => [...prev, armorPiece.id]);
+        }
     };
 
 
@@ -108,15 +142,16 @@ export const PageTwo: React.FC<PageTwoProps> = ({ points, setPoints, onNavigateB
                 </div>
 
                 <div className="flex justify-center border-b border-gray-300 dark:border-gray-700 mb-4">
+                    <TabButton tabName="streetVendor" label="Street Vendor" />
                     <TabButton tabName="shop" label="Shop" />
-                    <TabButton tabName="map" label="Map" />
+                    <TabButton tabName="battle" label="Battle" />
                 </div>
 
                 <div className="flex-grow bg-white dark:bg-gray-800 rounded-lg shadow-inner p-6">
-                {activeTab === 'shop' && (
+                {activeTab === 'streetVendor' && (
                         <div className="flex flex-col items-center justify-center h-full">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl">
-                                {shopItems.map(item => (
+                                {streetVendorItems.map(item => (
                                     <div key={item.id} className="flex flex-col items-center gap-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-900/50">
                                         <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">{item.name}</h3>
                                         <div className="w-full h-48 bg-gray-300 dark:bg-gray-700 rounded-lg shadow-md flex items-center justify-center">
@@ -132,22 +167,52 @@ export const PageTwo: React.FC<PageTwoProps> = ({ points, setPoints, onNavigateB
                                     </div>
                                 ))}
                             </div>
-                            <div className="h-16 mt-4 flex items-center" />
                         </div>
                     )}
-                    {activeTab === 'map' && (
+                    {activeTab === 'shop' && (
+                        <div className="flex flex-col items-center justify-start h-full">
+                            <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-2xl text-center">
+                                Welcome to the Armory. Each armor piece you purchase will give you one more try against the final boss.
+                            </p>
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-5xl">
+                                {armorItems.map(item => {
+                                    const isPurchased = purchasedArmor.includes(item.id);
+                                    const canAfford = points >= item.cost;
+                                    return (
+                                        <div key={item.id} className="flex flex-col items-center gap-4 p-4 rounded-lg bg-gray-100 dark:bg-gray-900/50">
+                                            <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">{item.name}</h3>
+                                            <div className="w-full h-48 bg-gray-300 dark:bg-gray-700 rounded-lg shadow-md flex items-center justify-center">
+                                                <span className="text-gray-500">Image Placeholder</span>
+                                            </div>
+                                            <button 
+                                                onClick={() => handleArmorPurchase(item)}
+                                                disabled={isPurchased || !canAfford}
+                                                className="px-6 py-2 w-full font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500 shadow-lg"
+                                            >
+                                                {isPurchased ? 'Purchased' : `Buy: ${item.cost} Points`}
+                                            </button>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+                    {activeTab === 'battle' && (
                         <div className="flex items-center justify-center h-full">
-                            <p className="text-gray-500 dark:text-gray-400">Map feature coming soon!</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-xl">Battle feature coming soon!</p>
                         </div>
                     )}
                 </div>
             </div>
-            <RewardModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                reward={pendingReward}
-                onClaim={handleClaimReward}
-            />
+            {modalContent && (
+                 <RewardModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    winningOutcome={modalContent.winningOutcome}
+                    reel={modalContent.reel}
+                    onClaim={handleClaimReward}
+                />
+            )}
         </>
     );
 };
