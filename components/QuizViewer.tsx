@@ -62,7 +62,7 @@ export const QuizViewer: React.FC<QuizViewerProps> = ({ quiz, isLoading }) => {
   if (isLoading) {
     return (
         <div className="flex-grow bg-white dark:bg-gray-800 p-6 rounded-b-lg shadow-xl h-full">
-            <h2 className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300 mb-6">Quiz Time!</h2>
+            <h2 className="text-2xl font-semibold text-violet-600 dark:text-violet-300 mb-6">Quiz Time!</h2>
             <LoadingSkeleton />
         </div>
     );
@@ -71,7 +71,7 @@ export const QuizViewer: React.FC<QuizViewerProps> = ({ quiz, isLoading }) => {
   if (quiz.length === 0) {
     return (
         <div className="flex-grow bg-white dark:bg-gray-800 p-6 rounded-b-lg shadow-xl h-full">
-             <h2 className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300 mb-4">Quiz Time!</h2>
+             <h2 className="text-2xl font-semibold text-violet-600 dark:text-violet-300 mb-4">Quiz Time!</h2>
             <div className="flex items-center justify-center h-full min-h-48 bg-gray-100/50 dark:bg-gray-900/50 rounded-lg">
                 <p className="text-gray-500 dark:text-gray-400">Generate a quiz from your notes to test your knowledge.</p>
             </div>

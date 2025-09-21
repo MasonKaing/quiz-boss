@@ -112,10 +112,10 @@ export const StudyTracker: React.FC<StudyTrackerProps> = ({ setPoints, isActive 
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
-      <h2 className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300 mb-4">Study Tracker</h2>
+      <h2 className="text-2xl font-semibold text-violet-600 dark:text-violet-300 mb-4">Study Tracker</h2>
       <div className="text-center">
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Total Study Time</p>
-        <p className="text-5xl font-mono font-bold text-yellow-500 dark:text-yellow-400 tracking-wider">
+        <p className="text-5xl font-mono font-bold text-cream-500 dark:text-grey-400 tracking-wider">
           {formatTimeLong(elapsedTime)}
         </p>
       </div>
@@ -152,8 +152,8 @@ export const StudyTracker: React.FC<StudyTrackerProps> = ({ setPoints, isActive 
       </div>
       {isPomodoroEnabled && (
         <div className="mt-4 text-center bg-gray-100 dark:bg-gray-900/50 p-4 rounded-lg">
-            <p className="text-lg font-semibold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">{pomodoroMode}</p>
-            <p className="text-4xl font-mono font-bold text-yellow-500 dark:text-yellow-400 mt-1">
+            <p className="text-lg font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">{pomodoroMode}</p>
+            <p className="text-4xl font-mono font-bold text-cream-500 dark:text-grey-400 mt-1">
                 {formatTime(pomodoroTimeLeft)}
             </p>
         </div>

@@ -21,7 +21,7 @@ const LoadingSkeleton: React.FC = () => (
 export const SummaryViewer: React.FC<SummaryViewerProps> = ({ summary, isLoading }) => {
   return (
     <div className="flex-grow bg-white dark:bg-gray-800 p-6 rounded-b-lg shadow-xl overflow-y-auto h-full">
-      <h2 className="text-2xl font-semibold text-cyan-600 dark:text-cyan-300 mb-4">Notes Summary</h2>
+      <h2 className="text-2xl font-semibold text-violet-600 dark:text-violet-300 mb-4">Notes Summary</h2>
       {isLoading && <LoadingSkeleton />}
       {!isLoading && !summary && (
         <div className="flex items-center justify-center h-full min-h-48 bg-gray-100/50 dark:bg-gray-900/50 rounded-lg">
