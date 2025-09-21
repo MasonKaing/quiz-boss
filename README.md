@@ -26,6 +26,7 @@ Before you begin, ensure you have the following installed on your system:
 ### Step 1: Clone the Repository
 ```bash
 git clone <repository-url>
+add Gemini API Key to .env.local
 cd quiz-boss
 ```
 
