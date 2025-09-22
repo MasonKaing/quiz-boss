@@ -1,8 +1,8 @@
-# Quiz Boss
+# QuizzBoss
 
 ## Description
 
-Quiz Boss is an innovative study enhancement website that leverages the power of Gemini AI to supercharge your learning experience. Our platform is designed to transform the way you study by providing intelligent tools that adapt to your learning style.
+QuizzBoss is an innovative study enhancement website that leverages the power of Gemini AI to supercharge your learning experience. Our platform is designed to transform the way you study by providing intelligent tools that adapt to your learning style.
 
 ### Key Features:
 - **AI-Powered Summaries**: Automatically summarize key points from your study materials
@@ -12,7 +12,7 @@ Quiz Boss is an innovative study enhancement website that leverages the power of
 - **Point System**: Earn points as you study and complete quizzes
 - **Boss Battle Mode**: Use earned points as shields to protect yourself in epic quiz boss battles!
 
-Transform your study routine from mundane to magnificent with Quiz Boss - where learning meets adventure!
+Transform your study routine from mundane to magnificent with QuizzBoss - where learning meets adventure!
 
 ## Prerequisites
 
